@@ -1,6 +1,6 @@
 {
   "name": "react-magic-move",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MagicMove for React.js",
   "main": "./dist/react-magic-move",
   "repository": {
