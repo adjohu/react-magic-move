@@ -1,27 +1,31 @@
 /* @jsx React.DOM */
+'use strict';
+
 var React = require('react');
 var cloneWithProps = require('react/lib/cloneWithProps');
 
 var Clones = React.createClass({
   displayName: 'MagicMoveClones',
 
-  childrenWithPositions () {
+  childrenWithPositions: function childrenWithPositions() {
+    var _this = this;
+
     var children = [];
-    React.Children.forEach(this.props.children, (child) => {
-      var style = this.props.positions[child.key];
+    React.Children.forEach(this.props.children, function (child) {
+      var style = _this.props.positions[child.key];
       var key = child.key;
-      children.push(cloneWithProps(child, { style, key }));
+      children.push(cloneWithProps(child, { style: style, key: key }));
     });
     return children.sort(function (a, b) {
-      return (a.key < b.key) ? -1 : (a.key > b.key) ? 1 : 0;
+      return a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
     });
   },
 
-  render () {
-    return (
-      <div className="MagicMoveClones">
-        {this.childrenWithPositions()}
-      </div>
+  render: function render() {
+    return React.createElement(
+      'div',
+      { className: 'MagicMoveClones' },
+      this.childrenWithPositions()
     );
   }
 });
@@ -30,37 +34,36 @@ var MagicMove = React.createClass({
 
   displayName: 'MagicMove',
 
-  getInitialState () {
+  getInitialState: function getInitialState() {
     return {
       animating: false
     };
   },
 
-  componentDidMount () {
+  componentDidMount: function componentDidMount() {
     this.makePortal();
     this.renderClonesInitially();
   },
 
-  componentWillUnmount () {
+  componentWillUnmount: function componentWillUnmount() {
     document.body.removeChild(this.portalNode);
   },
 
-  componentWillReceiveProps (nextProps) {
+  componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
     this.startAnimation(nextProps);
   },
 
-  componentDidUpdate (prevProps) {
-    if (this.state.animating)
-      this.renderClonesToNewPositions(prevProps);
+  componentDidUpdate: function componentDidUpdate(prevProps) {
+    if (this.state.animating) this.renderClonesToNewPositions(prevProps);
   },
 
-  makePortal () {
+  makePortal: function makePortal() {
     this.portalNode = document.createElement('div');
     this.portalNode.style.left = '-9999px';
     document.body.appendChild(this.portalNode);
   },
 
-  addTransitionEndEvent () {
+  addTransitionEndEvent: function addTransitionEndEvent() {
     // if you click RIGHT before the transition is done, the animation jumps,
     // its because the transitionend event fires even though its not quite
     // done, not sure how to hack around it yet.
@@ -68,44 +71,47 @@ var MagicMove = React.createClass({
     this.portalNode.addEventListener('transitionend', this._transitionHandler);
   },
 
-  removeTransitionEndEvent () {
+  removeTransitionEndEvent: function removeTransitionEndEvent() {
     this.portalNode.removeEventListener('transitionend', this._transitionHandler);
   },
 
-  startAnimation (nextProps) {
-    if (this.state.animating)
-      return;
+  startAnimation: function startAnimation(nextProps) {
+    var _this2 = this;
+
+    if (this.state.animating) return;
     this.addTransitionEndEvent();
     nextProps.animating = true;
     nextProps.positions = this.getPositions();
-    this.renderClones(nextProps, () => {
-      this.setState({ animating: true });
+    this.renderClones(nextProps, function () {
+      _this2.setState({ animating: true });
     });
   },
 
-  renderClonesToNewPositions (prevProps) {
+  renderClonesToNewPositions: function renderClonesToNewPositions(prevProps) {
     prevProps.positions = this.getPositions();
     this.renderClones(prevProps);
   },
 
-  finishAnimation () {
+  finishAnimation: function finishAnimation() {
     this.removeTransitionEndEvent();
     this.portalNode.style.position = 'absolute';
     this.setState({ animating: false });
   },
 
-  getPositions () {
+  getPositions: function getPositions() {
+    var _this3 = this;
+
     var positions = {};
-    React.Children.forEach(this.props.children, (child) => {
+    React.Children.forEach(this.props.children, function (child) {
       var ref = child.key;
-      var node = this.refs[ref].getDOMNode();
+      var node = _this3.refs[ref].getDOMNode();
       var rect = node.getBoundingClientRect();
       var computedStyle = getComputedStyle(node);
       var marginTop = parseInt(computedStyle.marginTop, 10);
       var marginLeft = parseInt(computedStyle.marginLeft, 10);
       var position = {
-        top: (rect.top - marginTop),
-        left: (rect.left - marginLeft),
+        top: rect.top - marginTop,
+        left: rect.left - marginLeft,
         width: rect.width,
         height: rect.height,
         position: 'absolute'
@@ -115,28 +121,28 @@ var MagicMove = React.createClass({
     return positions;
   },
 
-  renderClonesInitially () {
+  renderClonesInitially: function renderClonesInitially() {
     this.props.positions = this.getPositions();
-    React.render(<Clones {...this.props}/>, this.portalNode);
+    React.render(React.createElement(Clones, this.props), this.portalNode);
   },
 
-  renderClones (props, cb) {
+  renderClones: function renderClones(props, cb) {
     this.portalNode.style.position = '';
-    React.render(<Clones {...props}/>, this.portalNode, cb);
+    React.render(React.createElement(Clones, props), this.portalNode, cb);
   },
 
-  childrenWithRefs () {
-    return React.Children.map(this.props.children, (child) => {
-      return cloneWithProps(child, { ref: child.key});
+  childrenWithRefs: function childrenWithRefs() {
+    return React.Children.map(this.props.children, function (child) {
+      return cloneWithProps(child, { ref: child.key });
     });
   },
 
-  render () {
+  render: function render() {
     var style = { opacity: this.state.animating ? 0 : 1 };
-    return (
-      <div style={style}>
-        {this.childrenWithRefs()}
-      </div>
+    return React.createElement(
+      'div',
+      { style: style },
+      this.childrenWithRefs()
     );
   }
 });
